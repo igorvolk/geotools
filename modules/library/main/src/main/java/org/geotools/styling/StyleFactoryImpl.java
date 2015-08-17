@@ -18,11 +18,7 @@
  */
 package org.geotools.styling;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.measure.unit.Unit;
 import javax.swing.Icon;
@@ -65,7 +61,7 @@ import org.opengis.util.InternationalString;
  */
 public class StyleFactoryImpl extends AbstractStyleFactory
     implements StyleFactory2, org.opengis.style.StyleFactory {
-	
+
     private FilterFactory2 filterFactory;
     private StyleFactoryImpl2 delegate;
     
@@ -1010,5 +1006,20 @@ public class StyleFactoryImpl extends AbstractStyleFactory
     @Override
     public ContrastMethod createContrastMethod(ContrastMethod method) {
         return method;
+    }
+
+    @Override
+    public ExternalGraphic createExternalGraphic(String format, Expression contentExpression, String contentEncoding) {
+        ExternalGraphic extg = new ExternalGraphicImpl();
+        Map<String, Object> properties = extg.getCustomProperties();
+        if (properties == null){
+            properties = new HashMap<String, Object>();
+            extg.setCustomProperties(properties);
+        }
+        properties.put(INLINE_CONTENT, contentExpression);
+        properties.put(INLINE_CONTENT_ENCODING, contentEncoding);
+        extg.setFormat(format);
+
+        return extg;
     }
 }

@@ -31,6 +31,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,9 +42,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import org.geotools.data.Base64;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.renderer.VendorOptionParser;
 import org.geotools.renderer.composite.BlendComposite;
@@ -1306,6 +1310,21 @@ public class SLDStyleFactory {
         if (inlineContent != null) {
             return inlineContent;
         }
+        Map<String, Object> params = eg.getCustomProperties();
+        if ((params != null) &&
+                (params.containsKey(StyleFactory.INLINE_CONTENT)) &&
+                (params.containsKey(StyleFactory.INLINE_CONTENT_ENCODING))){
+            Expression inlineContentExpr = (Expression) params.get(StyleFactory.INLINE_CONTENT);
+            String contentEncoding = (String) params.get(StyleFactory.INLINE_CONTENT_ENCODING);
+            String content = inlineContentExpr.evaluate(feature, String.class);
+            byte[] contentBytes = content.getBytes();
+            String format = eg.getFormat();
+            try {
+                return parseIcon(contentBytes, format, contentEncoding);
+            } catch (IOException e) {
+                return null; // nothing to do
+            }
+        }
 
 		// extract the url
 		String strLocation;
@@ -1356,7 +1375,29 @@ public class SLDStyleFactory {
 		return null;
 	}
 
-	/**
+    private static Icon parseIcon(byte[] contentBytes, String format, String contentEncoding) throws IOException {
+        if (format.toLowerCase().contains("svg")){
+            return null;  // TODO
+        }
+        byte[] bytes = contentBytes;
+        if ("base64".equals(contentEncoding)){
+            bytes = Base64.decode(contentBytes);
+        } else
+        if (contentEncoding != null){
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning(
+                        "could not process <" + contentEncoding + "> content encoding");
+            }
+            return null;
+        }
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
+        if (image == null) {
+            throw new IOException("invalid image content");
+        }
+        return new ImageIcon(image);
+    }
+
+    /**
 	 * Given a mark and a feature, returns the Shape provided by the first
 	 * {@link MarkFactory} that was able to handle the Mark
 	 * 

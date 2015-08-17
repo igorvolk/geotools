@@ -19,6 +19,7 @@ package org.geotools.styling;
 import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.geotools.filter.FilterAttributeExtractor;
@@ -401,6 +402,16 @@ public class StyleAttributeExtractor extends FilterAttributeExtractor
         } catch(MalformedURLException e) {
             throw new RuntimeException("Errors while inspecting " +
             		"the location of an external graphic", e);
+        }
+
+        Map<String, Object> params = exgr.getCustomProperties();
+        if ((params != null) &&
+            (params.containsKey(StyleFactory.INLINE_CONTENT))) {
+            Expression inlineContent = (Expression) params.get(StyleFactory.INLINE_CONTENT);
+            if (inlineContent != null){
+//                visitCqlExpression(inlineContent.toString());
+                inlineContent.accept(this, null);
+            }
         }
     }
 

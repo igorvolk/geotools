@@ -831,6 +831,16 @@ public class SLDStyleTest extends TestCase {
         assertImagesEqual(getReferenceImage("test.png"), graphic.getInlineContent());
     }
 
+    public void testParseInlinePNGExpressionContent() throws Exception {
+        ExternalGraphic graphic = getGraphic("inlinePNGExpression.sld");
+        assertNull(graphic.getInlineContent());
+        assertEquals("image/png", graphic.getFormat());
+        assertNull(graphic.getLocation());
+        Map<String, Object> parameters = graphic.getCustomProperties();
+        assertNotNull(parameters.get(StyleFactory.INLINE_CONTENT));
+        assertEquals("base64",(String) parameters.get(StyleFactory.INLINE_CONTENT_ENCODING));
+    }
+
     public void testInvalidInlineContent() throws Exception {
         ExternalGraphic graphic = getGraphic("invalid-content.sld");
         assertNotNull(graphic.getInlineContent());
@@ -865,7 +875,7 @@ public class SLDStyleTest extends TestCase {
 
         Rule r = styles[0].featureTypeStyles().get(0).rules().get(0);
         assertEquals(1, r.getSymbolizers().length);
-        
+
         PolygonSymbolizer symbolizer = (PolygonSymbolizer)r.getSymbolizers()[0];
 
         Fill fill = symbolizer.getFill();
@@ -873,7 +883,7 @@ public class SLDStyleTest extends TestCase {
 
         Graphic graphicFill = fill.getGraphicFill();
         assertNotNull(graphicFill);
-        
+
         assertEquals(1, graphicFill.graphicalSymbols().size());
 
         GraphicalSymbol symbol = graphicFill.graphicalSymbols().get(0);

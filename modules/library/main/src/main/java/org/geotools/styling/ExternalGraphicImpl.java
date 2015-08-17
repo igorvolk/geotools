@@ -127,10 +127,11 @@ public class ExternalGraphicImpl implements ExternalGraphic, Symbol, Cloneable {
      * @param location New value of property location.
      */
     public void setLocation(java.net.URL location) {
-    	if (location == null) {
-    		throw new IllegalArgumentException("ExternalGraphic location URL cannot be null");
-    	}
-        this.uri = location.toString();
+    	if (location != null) {
+            this.uri = location.toString();
+        } else {
+            this.uri = null;
+        }
         this.location = location;
     }
 

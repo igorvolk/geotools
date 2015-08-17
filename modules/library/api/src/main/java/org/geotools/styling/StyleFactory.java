@@ -42,7 +42,10 @@ import org.opengis.util.InternationalString;
  * @source $URL$
  */
 public interface StyleFactory extends Factory, org.opengis.style.StyleFactory {
-    
+
+    public static final String INLINE_CONTENT = "content";
+    public static final String INLINE_CONTENT_ENCODING = "content_encoding";
+
     public TextSymbolizer createTextSymbolizer(Fill fill, Font[] fonts, Halo halo,
         Expression label, LabelPlacement labelPlacement, String geometryPropertyName);
 
@@ -725,5 +728,7 @@ public interface StyleFactory extends Factory, org.opengis.style.StyleFactory {
      * @param method
      * @return a deep copy of the method
      */
-    public ContrastMethod createContrastMethod(ContrastMethod method);   
+    public ContrastMethod createContrastMethod(ContrastMethod method);
+
+    public ExternalGraphic createExternalGraphic(String format, Expression contentExpression, String contentEncoding);
 }

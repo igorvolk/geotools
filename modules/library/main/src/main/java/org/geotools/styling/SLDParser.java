@@ -569,8 +569,20 @@ public class SLDParser {
             return ftc;
     }
 
-    private static Icon parseIcon(String content) throws IOException {
-        byte[] bytes = Base64.decode(content);
+    private static Icon parseIcon(String content, String format, String contentEncoding) throws IOException {
+        if (format.toLowerCase().contains("svg")){
+            return null;  // TODO
+        }
+        byte[] bytes;
+        if ("base64".equals(contentEncoding)){
+            bytes = Base64.decode(content);
+        } else {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                  LOGGER.warning(
+                      "could not process <" + contentEncoding + "> content encoding");
+            }
+            return null;
+        }
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
         if (image == null) {
             throw new IOException("invalid image content");
@@ -1772,6 +1784,8 @@ public class SLDParser {
         String format = "";
         String uri = "";
         String content = null;
+        Expression contentExpression = null;
+        String contentEncoding = null;
         Map<String, Object> paramList = new HashMap<String, Object>();
 
         NodeList children = root.getChildNodes();
@@ -1787,19 +1801,12 @@ public class SLDParser {
                 childName = child.getNodeName();
             }
             if (childName.equalsIgnoreCase("InlineContent")) {
-                String contentEncoding = getAttribute(child, "encoding");
+                contentEncoding = getAttribute(child, "encoding");
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("inline content with encoding " + contentEncoding);
                 }
-                if ("base64".equals(contentEncoding)) {
-                    content = getFirstChildValue(child);
-                } else {
-                    content = "";
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning(
-                                "could not process <" + contentEncoding + "> content encoding");
-                    }
-                }
+                contentExpression = parseCssParameter(child);
+                content = contentExpression.evaluate(null, String.class);
             } else if (childName.equalsIgnoreCase("OnLineResource")) {
                 uri = parseOnlineResource(child);
             }
@@ -1823,10 +1830,13 @@ public class SLDParser {
 
         ExternalGraphic extgraph;
         if (content != null) {
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.finest("inline content with encoding " + contentEncoding);
+            }
             Icon icon = null;
             if (content.length() > 0) {
                 try {
-                    icon = parseIcon(content);
+                    icon = parseIcon(content, format, contentEncoding);
                 } catch (IOException e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.log(Level.WARNING,
@@ -1841,6 +1851,9 @@ public class SLDParser {
             }
 
             extgraph = factory.createExternalGraphic(icon, format);
+        } else
+        if (contentExpression != null){
+            extgraph = factory.createExternalGraphic(format, contentExpression, contentEncoding);
         } else {
             URL url = onlineResourceLocator.locateResource(uri);
             if (url == null) {
@@ -1849,7 +1862,15 @@ public class SLDParser {
                 extgraph = factory.createExternalGraphic(url, format);
             }
         }
-        extgraph.setCustomProperties(paramList);
+        if ((paramList != null) &&
+             !paramList.isEmpty()) {
+            Map<String, Object> properties = extgraph.getCustomProperties();
+            if (properties == null){
+                properties = new HashMap<String, Object>();
+                extgraph.setCustomProperties(properties);
+            }
+            properties.putAll(paramList);
+        }
         return extgraph;
     }
 
