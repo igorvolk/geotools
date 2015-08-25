@@ -24,6 +24,7 @@ import org.geotools.data.FileDataStoreFactorySpi;
 import org.geotools.feature.FeatureCollections;
 import org.geotools.filter.FunctionFactory;
 import org.geotools.resources.LazySet;
+import org.geotools.styling.ExternalGraphicFactory2;
 import org.geotools.styling.StyleFactory;
 import org.opengis.feature.FeatureFactory;
 import org.opengis.feature.type.FeatureTypeFactory;
@@ -429,4 +430,17 @@ public final class CommonFactoryFinder extends FactoryFinder {
             copy.deregisterAll();
         }
     }
+
+    /**
+     * Returns a set of all available implementations for the {@link ExternalGraphicFactory2} interface.
+     *
+     * @param  hints An optional map of hints, or {@code null} if none.
+     * @return Set of available file data store factory implementations.
+     */
+    public static synchronized Set<ExternalGraphicFactory2> getExternalGraphicFactories2(Hints hints) {
+        hints = mergeSystemHints(hints);
+        return new LazySet<ExternalGraphicFactory2>(getServiceRegistry().getServiceProviders(
+                ExternalGraphicFactory2.class, null, hints));
+    }
+
 }

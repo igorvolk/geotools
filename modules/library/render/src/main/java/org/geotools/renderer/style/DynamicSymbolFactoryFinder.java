@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import org.geotools.factory.FactoryCreator;
 import org.geotools.factory.FactoryRegistry;
+import org.geotools.styling.ExternalGraphicFactory2;
 
 /**
  * Searches for all available {@link ExternalGraphicFactory} and
@@ -87,6 +88,10 @@ public final class DynamicSymbolFactoryFinder {
      */
     public static synchronized Iterator<ExternalGraphicFactory> getExternalGraphicFactories() {
         return getServiceRegistry().getServiceProviders(ExternalGraphicFactory.class, null, null);
+    }
+
+    public static synchronized Iterator<ExternalGraphicFactory2> getExternalGraphicFactories2() {
+        return getServiceRegistry().getServiceProviders(ExternalGraphicFactory2.class, null, null);
     }
 
     /**

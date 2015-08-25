@@ -21,6 +21,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -39,6 +40,7 @@ import org.apache.batik.bridge.UserAgentAdapter;
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.gvt.GraphicsNode;
 import org.apache.batik.util.XMLResourceDescriptor;
+import org.geotools.styling.ExternalGraphicFactory2;
 import org.geotools.util.SoftValueHashMap;
 import org.opengis.feature.Feature;
 import org.opengis.filter.expression.Expression;
@@ -60,7 +62,7 @@ import org.w3c.dom.NodeList;
  *         http://svn.osgeo.org/geotools/branches/2.6.x/modules/plugin/svg/src/main/java/org/geotools
  *         /renderer/style/SVGGraphicFactory.java $
  */
-public class SVGGraphicFactory implements ExternalGraphicFactory {
+public class SVGGraphicFactory implements ExternalGraphicFactory, ExternalGraphicFactory2 {
 
     /** Parsed SVG glyphs cache */
     static Map<URL, RenderableSVG> glyphCache = Collections.synchronizedMap(new SoftValueHashMap<URL, RenderableSVG>());
@@ -95,6 +97,16 @@ public class SVGGraphicFactory implements ExternalGraphicFactory {
             svg = new RenderableSVG(doc);
             glyphCache.put(svgfile, svg);
         }
+
+        return new SVGIcon(svg, size);
+    }
+
+    @Override
+    public Icon getIcon(byte[] byteContent, String format, int size) throws Exception {
+        String parser = XMLResourceDescriptor.getXMLParserClassName();
+        SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
+        Document doc = f.createDocument(null, new ByteArrayInputStream(byteContent));
+        RenderableSVG svg = new RenderableSVG(doc);
 
         return new SVGIcon(svg, size);
     }
