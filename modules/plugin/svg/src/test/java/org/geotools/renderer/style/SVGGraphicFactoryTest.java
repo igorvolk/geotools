@@ -16,8 +16,11 @@
  */
 package org.geotools.renderer.style;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.net.URL;
 
+import javax.imageio.ImageIO;
 import javax.swing.Icon;
 
 import junit.framework.TestCase;
@@ -87,4 +90,33 @@ public class SVGGraphicFactoryTest extends TestCase {
         assertNotNull(icon);
         assertEquals(500, icon.getIconHeight());
     }
+
+    public void testByteArrayInput() throws Exception {
+        String svgString = "<svg xmlns=\"http://www.w3.org/2000/svg\" \n" +
+                "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" +
+                "     width=\"500\" height=\"500\" viewBox=\"0 0 500 500\">\n" +
+                "<defs>\n" +
+                "   <linearGradient id=\"gradient1\" gradientUnits=\"userSpaceOnUse\" x1=\"100\" y1=\"10\" x2=\"300\" y2=\"10\">\n" +
+                "      <stop offset=\"0\" stop-color=\"blue\"/>\n" +
+                "      <stop offset=\"1\" stop-color=\"yellow\"/>\n" +
+                "   </linearGradient>\n" +
+                "   <radialGradient id=\"gradient2\" cx=\"250\" cy=\"300\" r=\"200\" fx=\"400\" fy=\"200\" gradientUnits=\"userSpaceOnUse\">\n" +
+                "      <stop offset=\"0\" stop-color=\"blue\"/>\n" +
+                "      <stop offset=\"1\" stop-color=\"yellow\"/>\n" +
+                "   </radialGradient>\n" +
+                "</defs>\n" +
+                "<rect x=\"10\" y=\"10\" width=\"480\" height=\"100\" fill=\"url(#gradient1)\" stroke=\"black\" stroke-width=\"2\"/>\n" +
+                "<rect x=\"10\" y=\"210\" width=\"480\" height=\"100\" fill=\"url(#gradient2)\" stroke=\"black\" stroke-width=\"2\"/>\n" +
+                "</svg>";
+        byte[] svgBytes = svgString.getBytes();
+        Icon icon = svg.getIcon(svgBytes, "image/svg", -1);
+        assertNotNull(icon);
+        assertEquals(500, icon.getIconHeight());
+    }
+
+    File file(String name) {
+        return new File("src/test/resources/org/geotools/renderer/lite/test-data/" + name
+                + ".png");
+    }
+
 }

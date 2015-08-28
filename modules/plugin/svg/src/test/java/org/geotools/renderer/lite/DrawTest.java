@@ -182,6 +182,16 @@ public class DrawTest {
     }
 
     @Test
+    public void testInlineSVGPoint() throws Exception {
+        StreamingRenderer renderer = setupPointRenderer("pointHouseInlineSVG.sld");
+
+        BufferedImage image = RendererBaseTest.showRender("PointHouse", renderer, TIME, bounds);
+        ImageAssert.assertEquals(new File(
+                "./src/test/resources/org/geotools/renderer/lite/test-data/pointHouse.png"), image,
+                1000);
+    }
+
+    @Test
     public void testDisplacedPoint() throws Exception {
         StreamingRenderer renderer = setupPointRenderer("pointHouseDisplaced.sld");
 
