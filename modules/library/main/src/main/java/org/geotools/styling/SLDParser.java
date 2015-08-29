@@ -24,12 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -41,11 +36,13 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.geotools.data.Base64;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.GeoTools;
+import org.geotools.factory.Hints;
 import org.geotools.filter.ExpressionDOMParser;
 import org.geotools.resources.i18n.ErrorKeys;
 import org.geotools.resources.i18n.Errors;
 import org.geotools.util.GrowableInternationalString;
 import org.geotools.util.SimpleInternationalString;
+import org.opengis.feature.type.FeatureTypeFactory;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
 import org.opengis.filter.FilterFactory2;
@@ -518,9 +515,7 @@ public class SLDParser {
             } else if (childName.equalsIgnoreCase("LayerFeatureConstraints")) {
                 layer.setLayerFeatureConstraints(parseLayerFeatureConstraints(child));
             }
-
         }
-
         return layer;
     }
 
@@ -569,7 +564,27 @@ public class SLDParser {
             return ftc;
     }
 
-    private static Icon parseIcon(String content) throws IOException {
+    private static Icon parseIcon(String content, String contentEncoding) throws Exception {
+        if ("xml".equals(contentEncoding)){
+            return parseSVGIcon(content);
+        } else
+        if ("base64".equals(contentEncoding)){
+            return parseRasterIcon(content);
+        } else {
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning(
+                    "could not process <" + contentEncoding + "> content encoding");
+            }
+            return null;
+        }
+    }
+
+    private static Icon parseSVGIcon(String content) throws Exception {
+        ExternalGraphicFactory2 egf2 = CommonFactoryFinder.getExternalGraphicFactories2(null);
+        return egf2.getIcon(content.getBytes(), null, -1);
+    }
+
+    private static Icon parseRasterIcon(String content) throws IOException {
         byte[] bytes = Base64.decode(content);
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
         if (image == null) {
@@ -1772,6 +1787,8 @@ public class SLDParser {
         String format = "";
         String uri = "";
         String content = null;
+        String contentEncoding = null;
+        Expression contentExpression = null;
         Map<String, Object> paramList = new HashMap<String, Object>();
 
         NodeList children = root.getChildNodes();
@@ -1787,19 +1804,12 @@ public class SLDParser {
                 childName = child.getNodeName();
             }
             if (childName.equalsIgnoreCase("InlineContent")) {
-                String contentEncoding = getAttribute(child, "encoding");
+                contentEncoding = getAttribute(child, "encoding");
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("inline content with encoding " + contentEncoding);
                 }
-                if ("base64".equals(contentEncoding)) {
-                    content = getFirstChildValue(child);
-                } else {
-                    content = "";
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning(
-                                "could not process <" + contentEncoding + "> content encoding");
-                    }
-                }
+                contentExpression = parseCssParameter(child);
+                content = contentExpression.evaluate(null, String.class);
             } else if (childName.equalsIgnoreCase("OnLineResource")) {
                 uri = parseOnlineResource(child);
             }
@@ -1823,11 +1833,14 @@ public class SLDParser {
 
         ExternalGraphic extgraph;
         if (content != null) {
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.finest("inline content with encoding " + contentEncoding);
+            }
             Icon icon = null;
             if (content.length() > 0) {
                 try {
-                    icon = parseIcon(content);
-                } catch (IOException e) {
+                    icon = parseIcon(content, contentEncoding);
+                } catch (Exception e) {
                     if (LOGGER.isLoggable(Level.WARNING)) {
                         LOGGER.log(Level.WARNING,
                                 "could not parse graphic inline content: " + content, e);
@@ -1841,6 +1854,9 @@ public class SLDParser {
             }
 
             extgraph = factory.createExternalGraphic(icon, format);
+//        } else
+//        if (contentExpression != null){
+//            extgraph = factory.createExternalGraphic(format, contentExpression, contentEncoding);
         } else {
             URL url = onlineResourceLocator.locateResource(uri);
             if (url == null) {
@@ -2108,7 +2124,7 @@ public class SLDParser {
             return right;
         if (right == null)
             return left;
-        Function mixed = ff.function("strConcat", new Expression[] { left, right });
+        Function mixed = ff.function("strConcat", new Expression[]{left, right});
         return mixed;
     }
 

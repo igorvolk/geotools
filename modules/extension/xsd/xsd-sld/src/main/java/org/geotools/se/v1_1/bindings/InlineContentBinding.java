@@ -17,7 +17,9 @@
 package org.geotools.se.v1_1.bindings;
 
 import org.geotools.data.Base64;
+import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.se.v1_1.SE;
+import org.geotools.styling.ExternalGraphicFactory2;
 import org.geotools.util.logging.Logging;
 import org.geotools.xml.*;
 import org.w3c.dom.Document;
@@ -105,16 +107,22 @@ public class InlineContentBinding extends AbstractComplexBinding {
      */
     public Object parse(ElementInstance instance, Node node, Object value) throws Exception {
         String encoding = (String) node.getAttributeValue("encoding");
-//        if ("xml".equalsIgnoreCase(encoding)) {
-//            Document dom = (Document) node.get
-//
+        String content = value.toString();
+        if ("xml".equalsIgnoreCase(encoding)) {
+            return parseSVGIcon(content);
+        } else
         if ("base64".equalsIgnoreCase(encoding)) {
-            String base64 = value.toString();
+            String base64 = content;
             Icon icon = parseIcon(base64);
             return icon;
         } else {
             throw new IllegalArgumentException("Encoding " + encoding + " not supported");
         }
+    }
+
+    private static Icon parseSVGIcon(String content) throws Exception {
+        ExternalGraphicFactory2 egf2 = CommonFactoryFinder.getExternalGraphicFactories2(null);
+        return egf2.getIcon(content.getBytes(), null, -1);
     }
 
     private static Icon parseIcon(String content) {

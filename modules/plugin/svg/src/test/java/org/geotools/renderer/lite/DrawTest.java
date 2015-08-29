@@ -134,7 +134,7 @@ public class DrawTest {
         if (hints == null) {
             hints = new HashMap<Object, Object>();
         }
-        
+
         if (renderer instanceof StreamingRenderer) {
             LabelCache labelCache;
             if (hints.containsKey(StreamingRenderer.LABEL_CACHE_KEY)) {
@@ -144,16 +144,16 @@ public class DrawTest {
                 hints.put(StreamingRenderer.LABEL_CACHE_KEY, labelCache);
             }
         }
-        
+
         renderer.setRendererHints(hints);
         renderer.setMapContent(mc);
         Document document = null;
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
-        
+
         db = dbf.newDocumentBuilder();
-        
+
 
         // Create an instance of org.w3c.dom.Document
         document = db.getDOMImplementation().createDocument(null, "svg", null);
@@ -174,16 +174,6 @@ public class DrawTest {
     @Test
     public void testPoint() throws Exception {
         StreamingRenderer renderer = setupPointRenderer("pointHouse.sld");
-
-        BufferedImage image = RendererBaseTest.showRender("PointHouse", renderer, TIME, bounds);
-        ImageAssert.assertEquals(new File(
-                "./src/test/resources/org/geotools/renderer/lite/test-data/pointHouse.png"), image,
-                1000);
-    }
-
-    @Test
-    public void testInlineSVGPoint() throws Exception {
-        StreamingRenderer renderer = setupPointRenderer("pointHouseInlineSVG.sld");
 
         BufferedImage image = RendererBaseTest.showRender("PointHouse", renderer, TIME, bounds);
         ImageAssert.assertEquals(new File(
@@ -267,6 +257,16 @@ public class DrawTest {
                 image, 1000);
     }
 
+
+    @Test
+    public void testInlineSVGPoint() throws Exception {
+        StreamingRenderer renderer = setupPointRenderer("pointHouseInlineSVG.sld");
+
+        BufferedImage image = RendererBaseTest.showRender("PointHouse", renderer, TIME, bounds);
+        ImageAssert.assertEquals(new File(
+                "./src/test/resources/org/geotools/renderer/lite/test-data/pointHouse.png"), image,
+                1000);
+    }
 
     private StreamingRenderer setupPointRenderer(String pointStyle) throws IOException {
         Style pStyle = RendererBaseTest.loadStyle(this, pointStyle);

@@ -76,6 +76,7 @@ public final class CommonFactoryFinder extends FactoryFinder {
         if (registry == null) {
             registry = new FactoryCreator(Arrays.asList(new Class<?>[] {
                     StyleFactory.class,
+                    ExternalGraphicFactory2.class,
                     FilterFactory.class,
                     FeatureLockFactory.class,
                     FileDataStoreFactorySpi.class,
@@ -437,10 +438,21 @@ public final class CommonFactoryFinder extends FactoryFinder {
      * @param  hints An optional map of hints, or {@code null} if none.
      * @return Set of available file data store factory implementations.
      */
-    public static synchronized Set<ExternalGraphicFactory2> getExternalGraphicFactories2(Hints hints) {
+    public static synchronized ExternalGraphicFactory2 getExternalGraphicFactories2(Hints hints) throws ClassNotFoundException {
         hints = mergeSystemHints(hints);
-        return new LazySet<ExternalGraphicFactory2>(getServiceRegistry().getServiceProviders(
-                ExternalGraphicFactory2.class, null, hints));
+        final Object h = hints.get(Hints.EXTERNAL_GRAPHIC_2_FACTORY);
+        if (!(h instanceof Class ? ExternalGraphicFactory2.class.isAssignableFrom((Class<?>) h)
+                : h instanceof ExternalGraphicFactory2))
+        {
+            /*
+             * Add the hint value only if the user didn't provided a suitable hint.
+             * In any case, do not change the user-supplied hints; clone them first.
+             */
+            hints = new Hints(hints);
+            Class<?> lenient = Class.forName("org.geotools.renderer.style.SVGGraphicFactory");
+            hints.put(Hints.EXTERNAL_GRAPHIC_2_FACTORY, lenient);
+        }
+        return (ExternalGraphicFactory2) lookup(ExternalGraphicFactory2.class, hints, Hints.EXTERNAL_GRAPHIC_2_FACTORY);
     }
 
 }

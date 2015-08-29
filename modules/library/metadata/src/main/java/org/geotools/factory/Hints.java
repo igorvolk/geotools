@@ -675,6 +675,12 @@ public class Hints extends RenderingHints {
     public static final ClassKey FILTER_FACTORY = new ClassKey(
             "org.opengis.filter.FilterFactory");
 
+    /**
+     * The {@link org.geotools.styling.ExternalGraphicFactory2} instance to use.
+     */
+    public static final ClassKey EXTERNAL_GRAPHIC_2_FACTORY = new ClassKey(
+            "org.geotools.styling.ExternalGraphicFactory2");
+
 
     /**
      * Provides the parameter values to a JDBC parametrized SQL view.
